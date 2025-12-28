@@ -1,0 +1,523 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Life Dashboard Pro | System</title>
+    <style>
+        /* CORE VARIABLES & THEMES */
+        :root {
+            --font-main: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            --radius: 12px;
+            --transition: 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+            --spacing: 1.5rem;
+            --max-width: 800px;
+        }
+
+        /* Themes Configuration */
+        body.theme-light { --bg: #ffffff; --surface: #f4f4f5; --text: #18181b; --text-muted: #71717a; --accent: #2563eb; --border: #e4e4e7; --success: #16a34a; --danger: #dc2626; }
+        body.theme-dark { --bg: #09090b; --surface: #18181b; --text: #f4f4f5; --text-muted: #a1a1aa; --accent: #3b82f6; --border: #27272a; --success: #22c55e; --danger: #ef4444; }
+        body.theme-sepia { --bg: #f5f2e9; --surface: #e6e0d2; --text: #4a4036; --text-muted: #8c7b6d; --accent: #b08d55; --border: #dcd6c8; --success: #65a30d; --danger: #b91c1c; }
+        body.theme-slate { --bg: #0f172a; --surface: #1e293b; --text: #f1f5f9; --text-muted: #94a3b8; --accent: #38bdf8; --border: #334155; --success: #34d399; --danger: #f87171; }
+        body.theme-forest { --bg: #022c22; --surface: #064e3b; --text: #ecfdf5; --text-muted: #6ee7b7; --accent: #10b981; --border: #065f46; --success: #34d399; --danger: #f87171; }
+        body.theme-ocean { --bg: #f0f9ff; --surface: #e0f2fe; --text: #0c4a6e; --text-muted: #64748b; --accent: #0284c7; --border: #bae6fd; --success: #0ea5e9; --danger: #e11d48; }
+        body.theme-midnight { --bg: #000000; --surface: #121212; --text: #e5e5e5; --text-muted: #737373; --accent: #ffffff; --border: #262626; --success: #4ade80; --danger: #f87171; }
+        body.theme-paper { --bg: #fdfbf7; --surface: #ffffff; --text: #333333; --text-muted: #777; --accent: #d35400; --border: #e5e5e5; --success: #27ae60; --danger: #c0392b; box-shadow: inset 0 0 60px rgba(0,0,0,0.03); }
+
+        /* RESET & BASE STYLES */
+        * { box-sizing: border-box; margin: 0; padding: 0; outline: none; }
+        body {
+            background-color: var(--bg); color: var(--text);
+            font-family: var(--font-main); line-height: 1.6; min-height: 100vh;
+            transition: background var(--transition), color var(--transition);
+            display: flex; flex-direction: column; overflow-y: scroll;
+        }
+
+        /* LAYOUT */
+        .container { width: 100%; max-width: var(--max-width); margin: 0 auto; padding: var(--spacing); flex: 1; }
+        .hidden { display: none !important; }
+        
+        /* HEADER */
+        header {
+            display: flex; justify-content: space-between; align-items: center;
+            margin-bottom: 2rem; border-bottom: 1px solid var(--border); padding-bottom: 1.5rem;
+        }
+        h1 { font-size: 1.4rem; font-weight: 700; letter-spacing: -0.03em; }
+        h2 { font-size: 1rem; margin-bottom: 1rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; font-weight: 600; }
+        
+        /* NAVIGATION TABS */
+        .tabs { display: flex; gap: 0.5rem; margin-bottom: 2rem; overflow-x: auto; padding-bottom: 5px; }
+        .tab-btn {
+            background: transparent; border: none; color: var(--text-muted);
+            padding: 0.6rem 1.2rem; cursor: pointer; font-weight: 500;
+            border-radius: var(--radius); transition: var(--transition);
+            font-size: 0.95rem; white-space: nowrap;
+        }
+        .tab-btn:hover { background: var(--surface); color: var(--text); }
+        .tab-btn.active { background: var(--surface); color: var(--accent); font-weight: 600; box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
+
+        /* COMPONENTS */
+        .btn {
+            background: var(--surface); color: var(--text); border: 1px solid var(--border);
+            padding: 0.6rem 1.2rem; border-radius: var(--radius); cursor: pointer;
+            font-size: 0.9rem; transition: var(--transition); display: inline-flex; align-items: center; gap: 8px; justify-content: center;
+        }
+        .btn:hover { border-color: var(--accent); color: var(--accent); transform: translateY(-1px); }
+        .btn-primary { background: var(--accent); color: var(--bg); border-color: var(--accent); font-weight: 500; }
+        .btn-primary:hover { opacity: 0.9; color: var(--bg); }
+        .btn-danger { color: var(--danger); border-color: var(--border); opacity: 0.8; }
+        .btn-danger:hover { background: #fee2e2; border-color: var(--danger); opacity: 1; color: #b91c1c; }
+        .btn-sm { padding: 0.4rem 0.8rem; font-size: 0.8rem; }
+
+        input[type="text"], input[type="number"], select, textarea {
+            background: var(--bg); border: 1px solid var(--border); color: var(--text);
+            padding: 0.8rem; border-radius: var(--radius); font-family: inherit; font-size: 1rem; width: 100%;
+            transition: border-color var(--transition);
+        }
+        input:focus, textarea:focus { border-color: var(--accent); }
+
+        /* DASHBOARD GRID */
+        .snapshot-grid {
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 1rem; margin-bottom: 2rem;
+        }
+        .metric-card {
+            background: var(--surface); padding: 1.5rem; border-radius: var(--radius);
+            border: 1px solid var(--border); position: relative;
+        }
+        .metric-card h3 { font-size: 0.85rem; color: var(--text-muted); margin-bottom: 0.5rem; font-weight: 500; }
+        .metric-card .value { font-size: 2.2rem; font-weight: 800; color: var(--text); line-height: 1.1; }
+        .metric-card .meta { display: flex; justify-content: space-between; align-items: center; margin-top: 1rem; font-size: 0.75rem; color: var(--text-muted); }
+        .trend-up { color: var(--success); }
+        .trend-down { color: var(--danger); }
+        .trend-flat { color: var(--text-muted); }
+
+        /* INPUT AREA */
+        .input-card { background: var(--surface); padding: 1.5rem; border-radius: var(--radius); border: 1px solid var(--border); margin-bottom: 2rem; }
+        .slider-row { display: flex; flex-direction: column; gap: 0.5rem; margin-bottom: 1.5rem; }
+        .slider-header { display: flex; justify-content: space-between; font-size: 0.9rem; font-weight: 500; }
+        input[type="range"] { width: 100%; cursor: pointer; accent-color: var(--accent); height: 6px; border-radius: 3px; }
+        
+        /* HISTORY LIST */
+        .history-list { display: flex; flex-direction: column; gap: 1rem; }
+        .history-item {
+            background: var(--surface); padding: 1.25rem; border-radius: var(--radius);
+            border: 1px solid var(--border); display: flex; flex-direction: column; gap: 1rem;
+        }
+        .history-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); padding-bottom: 0.8rem; }
+        .history-date { font-weight: 600; font-size: 0.9rem; }
+        .history-scores { display: flex; flex-wrap: wrap; gap: 0.8rem; }
+        .score-pill { font-size: 0.8rem; background: var(--bg); padding: 4px 10px; border-radius: 20px; border: 1px solid var(--border); }
+        .history-note { font-style: italic; color: var(--text-muted); font-size: 0.9rem; background: var(--bg); padding: 0.8rem; border-radius: var(--radius); }
+
+        /* SETTINGS */
+        .settings-grid { display: grid; gap: 1rem; }
+        .edit-row { display: flex; gap: 0.5rem; }
+
+        /* ANIMATIONS */
+        @keyframes fadeUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .view-section { animation: fadeUp 0.3s ease-out; }
+
+        /* FOOTER */
+        footer { margin-top: auto; padding: 2rem; text-align: center; font-size: 0.8rem; color: var(--text-muted); border-top: 1px solid var(--border); }
+    </style>
+</head>
+<body class="theme-light">
+
+    <div class="container">
+        <!-- HEADER -->
+        <header>
+            <h1>Life Dashboard</h1>
+            <select id="themeSelector" onchange="app.changeTheme(this.value)">
+                <option value="light">Light</option>
+                <option value="dark">Dark</option>
+                <option value="sepia">Sepia</option>
+                <option value="slate">Slate</option>
+                <option value="forest">Forest</option>
+                <option value="ocean">Ocean</option>
+                <option value="midnight">Midnight</option>
+                <option value="paper">Paper</option>
+            </select>
+        </header>
+
+        <!-- SETUP (First Load Only) -->
+        <div id="view-setup" class="hidden view-section">
+            <div style="text-align: center; max-width: 500px; margin: 2rem auto;">
+                <h2 style="font-size: 1.5rem; margin-bottom: 0.5rem; color: var(--text);">Initialize System</h2>
+                <p style="color: var(--text-muted); margin-bottom: 2rem;">Define 3 to 5 core metrics to track (e.g., Focus 🧠, Health 💪, Spirit ✨).</p>
+                <div id="setup-inputs" style="display: flex; flex-direction: column; gap: 10px;"></div>
+                <button class="btn btn-primary" style="margin-top: 2rem; width: 100%;" onclick="app.saveSetup()">Create Dashboard</button>
+            </div>
+        </div>
+
+        <!-- MAIN APP -->
+        <div id="view-main" class="hidden">
+            
+            <!-- TABS -->
+            <nav class="tabs">
+                <button class="tab-btn active" onclick="app.switchTab('dashboard')">Dashboard</button>
+                <button class="tab-btn" onclick="app.switchTab('history')">History & Logs</button>
+                <button class="tab-btn" onclick="app.switchTab('settings')">Settings</button>
+            </nav>
+
+            <!-- TAB: DASHBOARD -->
+            <div id="tab-dashboard" class="view-section">
+                
+                <!-- Status -->
+                <div style="display: flex; justify-content: space-between; align-items: end; margin-bottom: 1rem;">
+                    <h2>Current Snapshot</h2>
+                    <span id="lastUpdated" style="font-size: 0.8rem; color: var(--text-muted);"></span>
+                </div>
+
+                <!-- Metrics Grid -->
+                <div class="snapshot-grid" id="snapshotGrid">
+                    <!-- Populated by JS -->
+                </div>
+
+                <!-- New Entry Form -->
+                <div class="input-card">
+                    <h2 style="margin-bottom: 1.5rem;">Log New Entry</h2>
+                    <div id="inputForm">
+                        <!-- Sliders populated by JS -->
+                    </div>
+                    
+                    <div style="margin-top: 1.5rem;">
+                        <label style="display: block; font-size: 0.9rem; margin-bottom: 0.5rem; font-weight: 500;">Journal Note (Optional)</label>
+                        <textarea id="entryNote" rows="3" placeholder="Context for today's scores..."></textarea>
+                    </div>
+
+                    <div style="margin-top: 1.5rem; text-align: right;">
+                        <button class="btn btn-primary" onclick="app.logEntry()">Save Entry</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB: HISTORY -->
+            <div id="tab-history" class="hidden view-section">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+                    <h2>Past Entries</h2>
+                    <button class="btn btn-sm" onclick="app.exportData()">Download JSON</button>
+                </div>
+                <div id="historyList" class="history-list">
+                    <!-- List populated by JS -->
+                </div>
+            </div>
+
+            <!-- TAB: SETTINGS -->
+            <div id="tab-settings" class="hidden view-section">
+                <div class="input-card">
+                    <h2>Edit Metrics</h2>
+                    <p style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: 1rem;">Rename metrics or add emojis. Changes affect past data labels.</p>
+                    <div id="editMetricsList" class="settings-grid">
+                        <!-- Inputs -->
+                    </div>
+                    <button class="btn btn-primary" style="margin-top: 1rem;" onclick="app.updateMetrics()">Update Names</button>
+                </div>
+
+                <div class="input-card" style="border-color: var(--danger);">
+                    <h2 style="color: var(--danger);">Danger Zone</h2>
+                    <div style="display: flex; gap: 1rem; flex-wrap: wrap; margin-top: 1rem;">
+                        <label class="btn">
+                            Import Data
+                            <input type="file" onchange="app.importData(this)" style="display: none;">
+                        </label>
+                        <button class="btn btn-danger" onclick="app.resetDashboard()">Factory Reset</button>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- MANDATORY FOOTER -->
+    <footer>
+        Made with ❤️ by Aliriyaj007
+    </footer>
+
+    <script>
+        const app = {
+            state: {
+                config: { theme: 'light', metrics: [] },
+                history: []
+            },
+            STORAGE_KEY: 'life_dashboard_pro_v1',
+
+            init() {
+                const stored = localStorage.getItem(this.STORAGE_KEY);
+                if (stored) {
+                    try {
+                        this.state = JSON.parse(stored);
+                        this.changeTheme(this.state.config.theme);
+                        if (!this.state.config.metrics.length) this.showSetup();
+                        else this.showMain();
+                    } catch (e) { console.error(e); this.showSetup(); }
+                } else {
+                    this.showSetup();
+                }
+            },
+
+            // --- VIEW MANAGEMENT ---
+            showSetup() {
+                document.getElementById('view-setup').classList.remove('hidden');
+                const container = document.getElementById('setup-inputs');
+                container.innerHTML = '';
+                for(let i=1; i<=5; i++) {
+                    container.innerHTML += `<input placeholder="Metric ${i} (e.g. Focus 🧠)" id="setup_m_${i}">`;
+                }
+            },
+
+            showMain() {
+                document.getElementById('view-setup').classList.add('hidden');
+                document.getElementById('view-main').classList.remove('hidden');
+                this.renderDashboard();
+                this.renderHistory();
+                this.renderSettings();
+            },
+
+            switchTab(tabName) {
+                // Hide all tabs
+                ['dashboard', 'history', 'settings'].forEach(t => {
+                    document.getElementById(`tab-${t}`).classList.add('hidden');
+                });
+                // Remove active class from buttons
+                document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+                
+                // Show selected
+                document.getElementById(`tab-${tabName}`).classList.remove('hidden');
+                
+                // Find button that called this (rough match) or update by index
+                const buttons = document.querySelectorAll('.tab-btn');
+                if(tabName === 'dashboard') buttons[0].classList.add('active');
+                if(tabName === 'history') buttons[1].classList.add('active');
+                if(tabName === 'settings') buttons[2].classList.add('active');
+            },
+
+            // --- CORE LOGIC ---
+            saveSetup() {
+                const metrics = [];
+                for(let i=1; i<=5; i++) {
+                    const val = document.getElementById(`setup_m_${i}`).value.trim();
+                    if(val) metrics.push(val);
+                }
+                if(metrics.length < 1) return alert("Add at least one metric.");
+                this.state.config.metrics = metrics;
+                this.save();
+                this.showMain();
+            },
+
+            logEntry() {
+                const values = {};
+                this.state.config.metrics.forEach(m => {
+                    values[m] = parseInt(document.getElementById(`inp_${m}`).value, 10);
+                });
+                const note = document.getElementById('entryNote').value.trim();
+                
+                this.state.history.unshift({
+                    id: Date.now(),
+                    date: new Date().toISOString(),
+                    values: values,
+                    note: note
+                });
+
+                document.getElementById('entryNote').value = '';
+                this.save();
+                this.renderDashboard();
+                this.renderHistory();
+                this.switchTab('dashboard'); // Focus back
+                alert("Entry saved.");
+            },
+
+            deleteEntry(id) {
+                if(!confirm("Delete this entry?")) return;
+                this.state.history = this.state.history.filter(h => h.id !== id);
+                this.save();
+                this.renderDashboard();
+                this.renderHistory();
+            },
+
+            updateMetrics() {
+                const newMetrics = [];
+                const oldMetrics = this.state.config.metrics;
+                
+                for(let i=0; i<oldMetrics.length; i++) {
+                    const val = document.getElementById(`edit_m_${i}`).value.trim();
+                    if(val) newMetrics.push(val);
+                }
+
+                // Map old data to new names if possible (simple index mapping)
+                if(newMetrics.length === oldMetrics.length) {
+                    const mapping = {};
+                    oldMetrics.forEach((m, idx) => mapping[m] = newMetrics[idx]);
+                    
+                    // Update history keys
+                    this.state.history = this.state.history.map(h => {
+                        const newValues = {};
+                        for(let key in h.values) {
+                            newValues[mapping[key] || key] = h.values[key];
+                        }
+                        return { ...h, values: newValues };
+                    });
+
+                    this.state.config.metrics = newMetrics;
+                    this.save();
+                    location.reload(); // Reload to refresh all DOM
+                } else {
+                    alert("Count of metrics must match for rename. Do not delete inputs.");
+                }
+            },
+
+            // --- RENDERING ---
+            renderDashboard() {
+                const grid = document.getElementById('snapshotGrid');
+                const form = document.getElementById('inputForm');
+                grid.innerHTML = '';
+                form.innerHTML = '';
+
+                // Last updated text
+                const last = this.state.history[0];
+                const dateStr = last ? new Date(last.date).toLocaleDateString() : 'Never';
+                document.getElementById('lastUpdated').innerText = `Last update: ${dateStr}`;
+
+                // Calculate Averages
+                const averages = {};
+                if (this.state.history.length > 0) {
+                    this.state.config.metrics.forEach(m => {
+                        const total = this.state.history.reduce((sum, entry) => sum + (entry.values[m] || 0), 0);
+                        averages[m] = (total / this.state.history.length).toFixed(1);
+                    });
+                }
+
+                // Render Metrics
+                this.state.config.metrics.forEach(m => {
+                    const currentVal = last ? (last.values[m] || 0) : '-';
+                    const prevVal = this.state.history[1] ? (this.state.history[1].values[m] || 0) : currentVal;
+                    const avg = averages[m] || '-';
+                    
+                    // Trend Logic
+                    let trendIcon = '→';
+                    let trendClass = 'trend-flat';
+                    if (typeof currentVal === 'number' && typeof prevVal === 'number') {
+                        if (currentVal > prevVal) { trendIcon = '↑'; trendClass = 'trend-up'; }
+                        if (currentVal < prevVal) { trendIcon = '↓'; trendClass = 'trend-down'; }
+                    }
+
+                    // Snapshot Card
+                    grid.innerHTML += `
+                        <div class="metric-card">
+                            <h3>${m}</h3>
+                            <div class="value">${currentVal}</div>
+                            <div class="meta">
+                                <span>Avg: ${avg}</span>
+                                <span class="${trendClass}">${trendIcon}</span>
+                            </div>
+                        </div>
+                    `;
+
+                    // Input Slider
+                    form.innerHTML += `
+                        <div class="slider-row">
+                            <div class="slider-header">
+                                <label>${m}</label>
+                                <span id="disp_${m}">5</span>
+                            </div>
+                            <input type="range" min="0" max="10" value="5" id="inp_${m}" 
+                                oninput="document.getElementById('disp_${m}').innerText = this.value">
+                        </div>
+                    `;
+                });
+            },
+
+            renderHistory() {
+                const list = document.getElementById('historyList');
+                list.innerHTML = '';
+                
+                if(this.state.history.length === 0) {
+                    list.innerHTML = '<div style="text-align:center; color:var(--text-muted);">No entries yet.</div>';
+                    return;
+                }
+
+                this.state.history.forEach(entry => {
+                    const d = new Date(entry.date);
+                    const dateFmt = `${d.toLocaleDateString()} ${d.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}`;
+                    
+                    let scoresHtml = '';
+                    for (const [key, val] of Object.entries(entry.values)) {
+                        let color = '';
+                        if(val >= 8) color = 'border-color: var(--success); color: var(--success);';
+                        else if(val <= 3) color = 'border-color: var(--danger); color: var(--danger);';
+                        
+                        scoresHtml += `<span class="score-pill" style="${color}">${key}: <b>${val}</b></span>`;
+                    }
+
+                    list.innerHTML += `
+                        <div class="history-item">
+                            <div class="history-header">
+                                <span class="history-date">${dateFmt}</span>
+                                <button class="btn btn-sm btn-danger" onclick="app.deleteEntry(${entry.id})" style="padding: 2px 8px; font-size: 0.7rem;">✕</button>
+                            </div>
+                            <div class="history-scores">${scoresHtml}</div>
+                            ${entry.note ? `<div class="history-note">"${entry.note}"</div>` : ''}
+                        </div>
+                    `;
+                });
+            },
+
+            renderSettings() {
+                const list = document.getElementById('editMetricsList');
+                list.innerHTML = '';
+                this.state.config.metrics.forEach((m, i) => {
+                    list.innerHTML += `
+                        <div class="edit-row">
+                            <input type="text" value="${m}" id="edit_m_${i}">
+                        </div>
+                    `;
+                });
+            },
+
+            // --- UTILS ---
+            changeTheme(t) {
+                this.state.config.theme = t;
+                document.body.className = `theme-${t}`;
+                document.getElementById('themeSelector').value = t;
+                if(document.getElementById('view-main').classList.contains('hidden') === false) this.save();
+            },
+
+            save() { localStorage.setItem(this.STORAGE_KEY, JSON.stringify(this.state)); },
+
+            resetDashboard() {
+                if(confirm("PERMANENTLY DELETE ALL DATA?")) {
+                    localStorage.removeItem(this.STORAGE_KEY);
+                    location.reload();
+                }
+            },
+
+            exportData() {
+                const blob = new Blob([JSON.stringify(this.state, null, 2)], {type: "application/json"});
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `life-dashboard-backup-${new Date().toISOString().slice(0,10)}.json`;
+                a.click();
+            },
+
+            importData(input) {
+                const file = input.files[0];
+                if(!file) return;
+                const reader = new FileReader();
+                reader.onload = e => {
+                    try {
+                        const data = JSON.parse(e.target.result);
+                        if(data.config && data.history) {
+                            this.state = data;
+                            this.save();
+                            location.reload();
+                        } else alert("Invalid file");
+                    } catch(err) { alert("Error reading file"); }
+                };
+                reader.readAsText(file);
+            }
+        };
+
+        window.addEventListener('DOMContentLoaded', () => app.init());
+    </script>
+</body>
+</html>
